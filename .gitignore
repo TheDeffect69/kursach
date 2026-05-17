@@ -1,0 +1,10 @@
+build/
+CMakeLists.txt.user
+*.user
+*.o
+*.obj
+*.exe
+*.dll
+*.dylib
+*.so
+.DS_Store
