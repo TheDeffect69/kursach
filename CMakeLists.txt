@@ -8,7 +8,12 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt5 COMPONENTS Widgets Core Gui REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Core Gui REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Core Gui REQUIRED)
+
+if(QT_VERSION_MAJOR EQUAL 6)
+    find_package(Qt6 COMPONENTS Core5Compat REQUIRED)
+endif()
 
 add_executable(EquipmentManager
     src/main.cpp
@@ -19,4 +24,8 @@ add_executable(EquipmentManager
     src/equipmentdialog.h
 )
 
-target_link_libraries(EquipmentManager PRIVATE Qt5::Widgets Qt5::Core Qt5::Gui)
+if(QT_VERSION_MAJOR EQUAL 6)
+    target_link_libraries(EquipmentManager PRIVATE Qt6::Widgets Qt6::Core Qt6::Gui Qt6::Core5Compat)
+else()
+    target_link_libraries(EquipmentManager PRIVATE Qt5::Widgets Qt5::Core Qt5::Gui)
+endif()
