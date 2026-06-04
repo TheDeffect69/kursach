@@ -15,7 +15,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
     find_package(Qt6 COMPONENTS Core5Compat REQUIRED)
 endif()
 
-add_executable(EquipmentManager
+add_executable(EquipmentManager WIN32
     src/main.cpp
     src/mainwindow.cpp
     src/mainwindow.h
