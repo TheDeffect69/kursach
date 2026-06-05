@@ -6,6 +6,7 @@
 #include <QJsonArray>
 #include <QFile>
 #include <QHeaderView>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -54,25 +55,35 @@ MainWindow::~MainWindow()
 
 void MainWindow::refreshTable()
 {
+    qDebug() << "Refreshing table...";
     tableWidget->setRowCount(0);
+    tableWidget->setRowCount(equipmentList.size());
     int row = 0;
     for (const Equipment &eq : equipmentList) {
-        tableWidget->insertRow(row);
         tableWidget->setItem(row, 0, new QTableWidgetItem(eq.name));
         tableWidget->setItem(row, 1, new QTableWidgetItem(eq.type));
         tableWidget->setItem(row, 2, new QTableWidgetItem(eq.maintenanceInfo));
         tableWidget->setItem(row, 3, new QTableWidgetItem(eq.lastServiceDate));
         row++;
     }
+    qDebug() << "Table refreshed, total rows:" << equipmentList.size();
 }
 
 void MainWindow::addRecord()
 {
-    EquipmentDialog dialog(this);
-    if (dialog.exec() == QDialog::Accepted) {
-        equipmentList.append(dialog.getEquipment());
+    qDebug() << "Add Record clicked. Opening dialog...";
+    EquipmentDialog *dialog = new EquipmentDialog(this);
+    if (dialog->exec() == QDialog::Accepted) {
+        qDebug() << "Dialog accepted. Appending data to QLinkedList...";
+        Equipment eq = dialog->getEquipment();
+        equipmentList.append(eq);
+        qDebug() << "Data appended. Calling refreshTable...";
         refreshTable();
+        qDebug() << "Add Record complete.";
+    } else {
+        qDebug() << "Dialog cancelled.";
     }
+    dialog->deleteLater();
 }
 
 void MainWindow::editRecord()
