@@ -6,7 +6,6 @@
 #include <QJsonArray>
 #include <QFile>
 #include <QHeaderView>
-#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -56,12 +55,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::addRecord()
 {
-    EquipmentDialog *dialog = new EquipmentDialog(this);
-    if (dialog->exec() == QDialog::Accepted) {
-        Equipment eq = dialog->getEquipment();
+    EquipmentDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted) {
+        Equipment eq = dialog.getEquipment();
         tableModel->addEquipment(eq);
     }
-    dialog->deleteLater();
 }
 
 void MainWindow::editRecord()

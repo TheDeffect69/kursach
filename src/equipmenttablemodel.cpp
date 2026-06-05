@@ -69,7 +69,6 @@ void EquipmentTableModel::updateEquipment(int row, const Equipment &eq)
     std::advance(it, row);
     *it = eq;
 
-    // Notify the view that data changed for this specific row across all columns
     QModelIndex topLeft = index(row, 0);
     QModelIndex bottomRight = index(row, columnCount() - 1);
     emit dataChanged(topLeft, bottomRight);
