@@ -14,11 +14,14 @@ MainWindow::MainWindow(QWidget *parent)
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
 
-    tableWidget = new QTableWidget(0, 4, this);
-    tableWidget->setHorizontalHeaderLabels({"Name", "Type", "Maintenance Info", "Last Service Date"});
-    tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
-    tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tableModel = new EquipmentTableModel(this);
+
+    tableView = new QTableView(this);
+    tableView->setModel(tableModel);
+    tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tableView->setSelectionMode(QAbstractItemView::SingleSelection);
 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     addButton = new QPushButton("Add", this);
@@ -33,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent)
     buttonLayout->addWidget(saveButton);
     buttonLayout->addWidget(loadButton);
 
-    mainLayout->addWidget(tableWidget);
+    mainLayout->addWidget(tableView);
     mainLayout->addLayout(buttonLayout);
 
     setCentralWidget(centralWidget);
@@ -45,79 +48,49 @@ MainWindow::MainWindow(QWidget *parent)
     connect(deleteButton, &QPushButton::clicked, this, &MainWindow::deleteRecord);
     connect(saveButton, &QPushButton::clicked, this, &MainWindow::saveToFile);
     connect(loadButton, &QPushButton::clicked, this, &MainWindow::loadFromFile);
-
-    refreshTable();
 }
 
 MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::refreshTable()
-{
-    qDebug() << "Refreshing table...";
-    tableWidget->setRowCount(0);
-    tableWidget->setRowCount(equipmentList.size());
-    int row = 0;
-    for (const Equipment &eq : equipmentList) {
-        tableWidget->setItem(row, 0, new QTableWidgetItem(eq.name));
-        tableWidget->setItem(row, 1, new QTableWidgetItem(eq.type));
-        tableWidget->setItem(row, 2, new QTableWidgetItem(eq.maintenanceInfo));
-        tableWidget->setItem(row, 3, new QTableWidgetItem(eq.lastServiceDate));
-        row++;
-    }
-    qDebug() << "Table refreshed, total rows:" << equipmentList.size();
-}
-
 void MainWindow::addRecord()
 {
-    qDebug() << "Add Record clicked. Opening dialog...";
     EquipmentDialog *dialog = new EquipmentDialog(this);
     if (dialog->exec() == QDialog::Accepted) {
-        qDebug() << "Dialog accepted. Appending data to QLinkedList...";
         Equipment eq = dialog->getEquipment();
-        equipmentList.append(eq);
-        qDebug() << "Data appended. Calling refreshTable...";
-        refreshTable();
-        qDebug() << "Add Record complete.";
-    } else {
-        qDebug() << "Dialog cancelled.";
+        tableModel->addEquipment(eq);
     }
     dialog->deleteLater();
 }
 
 void MainWindow::editRecord()
 {
-    int row = tableWidget->currentRow();
-    if (row < 0) {
+    QModelIndex currentIndex = tableView->currentIndex();
+    if (!currentIndex.isValid()) {
         QMessageBox::warning(this, "Edit Record", "Please select a record to edit.");
         return;
     }
 
-    auto it = equipmentList.begin();
-    std::advance(it, row);
+    int row = currentIndex.row();
+    Equipment currentEq = tableModel->getEquipment(row);
 
     EquipmentDialog dialog(this);
-    dialog.setEquipment(*it);
+    dialog.setEquipment(currentEq);
     if (dialog.exec() == QDialog::Accepted) {
-        *it = dialog.getEquipment();
-        refreshTable();
+        tableModel->updateEquipment(row, dialog.getEquipment());
     }
 }
 
 void MainWindow::deleteRecord()
 {
-    int row = tableWidget->currentRow();
-    if (row < 0) {
+    QModelIndex currentIndex = tableView->currentIndex();
+    if (!currentIndex.isValid()) {
         QMessageBox::warning(this, "Delete Record", "Please select a record to delete.");
         return;
     }
 
-    auto it = equipmentList.begin();
-    std::advance(it, row);
-    equipmentList.erase(it);
-
-    refreshTable();
+    tableModel->removeEquipment(currentIndex.row());
 }
 
 void MainWindow::saveToFile()
@@ -125,8 +98,9 @@ void MainWindow::saveToFile()
     QString fileName = QFileDialog::getSaveFileName(this, "Save File", "", "JSON Files (*.json)");
     if (fileName.isEmpty()) return;
 
+    const QLinkedList<Equipment>& currentList = tableModel->getList();
     QJsonArray jsonArray;
-    for (const Equipment &eq : equipmentList) {
+    for (const Equipment &eq : currentList) {
         jsonArray.append(eq.toJson());
     }
 
@@ -161,12 +135,12 @@ void MainWindow::loadFromFile()
         return;
     }
 
-    equipmentList.clear();
+    QLinkedList<Equipment> newList;
     QJsonArray jsonArray = doc.array();
     for (int i = 0; i < jsonArray.size(); ++i) {
         QJsonObject jsonObj = jsonArray[i].toObject();
-        equipmentList.append(Equipment::fromJson(jsonObj));
+        newList.append(Equipment::fromJson(jsonObj));
     }
 
-    refreshTable();
+    tableModel->setList(newList);
 }

@@ -22,6 +22,8 @@ add_executable(EquipmentManager WIN32
     src/equipment.h
     src/equipmentdialog.cpp
     src/equipmentdialog.h
+    src/equipmenttablemodel.cpp
+    src/equipmenttablemodel.h
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)

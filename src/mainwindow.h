@@ -2,12 +2,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QTableWidget>
+#include <QTableView>
 #include <QPushButton>
-#include <QLinkedList>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include "equipment.h"
+#include "equipmenttablemodel.h"
 
 class MainWindow : public QMainWindow
 {
@@ -25,11 +24,9 @@ private slots:
     void loadFromFile();
 
 private:
-    void refreshTable();
+    EquipmentTableModel *tableModel;
+    QTableView *tableView;
 
-    QLinkedList<Equipment> equipmentList;
-
-    QTableWidget *tableWidget;
     QPushButton *addButton;
     QPushButton *editButton;
     QPushButton *deleteButton;
